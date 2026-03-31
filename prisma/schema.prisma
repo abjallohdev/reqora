@@ -12,9 +12,189 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────────
+ 
+enum Department {
+  ENGINEERING
+  HumanResources
+  FINANCE
+  OPERATIONS
+  MARKETING
+  LEGAL
+  IT_SUPPORT
+  FACILITIES
+}
+ 
+enum RequestType {
+  SOFTWARE_ACCESS
+  HARDWARE_REQUEST
+  ONBOARDING
+  EXPENSE_REIMBURSEMENT
+  POLICY_CLARIFICATION
+  MAINTENANCE
+  TRAINING
+  OTHER
+}
+ 
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+ 
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+ 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+/// A user account — either a regular employee or an admin.
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  department   Department
+  role         UserRole   @default(USER)
+  avatarUrl    String?
+  passwordHash String?    // null if user signs in via OAuth only
+
+  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  requests         ServiceRequest[] @relation("SubmittedBy")
+  assignedRequests ServiceRequest[] @relation("AssignedTo")
+  comments         Comment[]        @relation("AuthoredBy")
+  statusLogs       StatusLog[]      @relation("ChangedBy")
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([department])
+  @@map("users")
+}
+
+/// Linked auth provider accounts (OAuth or credentials).
+/// One User can have multiple accounts (e.g. Google + GitHub).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // "credentials" | "google" | "github" | etc.
+  provider          String
+  // For credentials: same as userId. For OAuth: the provider's user ID.
+  providerAccountId String
+
+  // OAuth tokens — all optional; not used for credential logins
+  accessToken       String?   @db.Text
+  refreshToken      String?   @db.Text
+  accessTokenExpiry DateTime?
+  tokenType         String?
+  scope             String?
+  idToken           String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// Server-side session — created on login, destroyed on logout or expiry.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// A service request submitted by a user.
+model ServiceRequest {
+  id          String        @id @default(cuid())
+  ticketId    String        @unique
+  title       String
+  description String        @db.Text
+  department  Department
+  type        RequestType
+  priority    Priority      @default(MEDIUM)
+  status      RequestStatus @default(PENDING)
+
+  submittedById String
+  submittedBy   User   @relation("SubmittedBy", fields: [submittedById], references: [id])
+
+  assignedToId  String?
+  assignedTo    User?  @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  comments   Comment[]
+  statusLogs StatusLog[]
+
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([department])
+  @@index([submittedById])
+  @@index([assignedToId])
+  @@index([createdAt])
+  @@map("service_requests")
+}
+
+/// An internal comment or note on a service request.
+model Comment {
+  id         String  @id @default(cuid())
+  body       String  @db.Text
+  isInternal Boolean @default(false)
+
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  authorId  String
+  author    User   @relation("AuthoredBy", fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requestId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+/// Audit log — one row per status transition.
+model StatusLog {
+  id         String @id @default(cuid())
+
+  fromStatus RequestStatus?
+  toStatus   RequestStatus
+
+  note      String?
+
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  changedById String
+  changedBy   User   @relation("ChangedBy", fields: [changedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([requestId])
+  @@index([changedById])
+  @@map("status_logs")
 }
