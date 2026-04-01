@@ -186,7 +186,7 @@ const Page = () => {
           />
 
           {/* ── Admin Banner ── */}
-          {session?.user.role === 'ADMIN' && (
+          {/* {session?.user.role === 'ADMIN' && (
             <div className='mt-4 bg-stone-900 rounded-xl px-5 py-3 flex items-center gap-2.5'>
               <div className='w-1.5 h-1.5 rounded-full bg-green-400 shrink-0' />
               <span className='text-white text-sm font-medium'>
@@ -197,7 +197,7 @@ const Page = () => {
                 notes.
               </span>
             </div>
-          )}
+          )} */}
         </Container>
       </div>
 
