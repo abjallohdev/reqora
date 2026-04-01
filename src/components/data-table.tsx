@@ -33,8 +33,9 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { ChevronDown } from 'lucide-react'
-import { ServiceRequest } from './columns'
+// import { ServiceRequest } from './columns'
 import { Department, RequestStatus, RequestType } from '@/lib/enums'
+import { ServiceRequest } from '@/lib/types'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]

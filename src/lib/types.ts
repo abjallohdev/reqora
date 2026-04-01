@@ -1,4 +1,4 @@
-import { Department, Priority, RequestStatus, RequestType } from "./enums"
+import { Department, Priority, RequestStatus, RequestType } from './enums'
 
 export interface ServiceRequest {
   id: string
@@ -10,6 +10,14 @@ export interface ServiceRequest {
   status: RequestStatus
   submittedBy: { id: string; name: string }
   assignedTo: { id: string; name: string } | null
-  createdAt: Date
+  createdAt: string // Adjusted format for Redux serializability
   description: string
+  comments?: {
+    id: string
+    body: string
+    isInternal: boolean
+    createdAt: string
+    authorId: string
+    author: { name: string }
+  }[]
 }
