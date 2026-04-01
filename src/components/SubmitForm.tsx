@@ -181,7 +181,7 @@ const SubmitForm = ({ onSuccess, onClose, existingRequest }: Props) => {
             <label className={labelCls}>Description *</label>
             <textarea
               {...register('description')}
-              className={`${inputCls} min-h-[100px] resize-y`}
+              className={`${inputCls} min-h-25 resize-y`}
               placeholder='Describe the issue in detail...'
               disabled={isSubmitting}
             />
@@ -204,7 +204,7 @@ const SubmitForm = ({ onSuccess, onClose, existingRequest }: Props) => {
             <button
               type='submit'
               disabled={isSubmitting}
-              className='flex-[2] py-2.5 border-none rounded-lg bg-stone-900 text-white font-semibold cursor-pointer text-sm font-[inherit] hover:bg-stone-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300'
+              className='flex-2 py-2.5 border-none rounded-lg bg-stone-900 text-white font-semibold cursor-pointer text-sm font-[inherit] hover:bg-stone-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-300'
             >
               {isSubmitting
                 ? isEditing

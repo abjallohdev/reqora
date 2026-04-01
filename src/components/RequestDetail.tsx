@@ -217,7 +217,7 @@ export default function RequestDetail({
                       <button
                         onClick={() => handleDeleteComment(comment.id)}
                         disabled={deletingCommentId === comment.id}
-                        className='text-stone-400 hover:text-red-500 transition-colors p-1 flex-shrink-0 relative top-[-4px] right-[-4px]'
+                        className='text-stone-400 hover:text-red-500 transition-colors p-1 shrink-0 relative -top-1 -right-1'
                         title='Delete Comment'
                       >
                         {deletingCommentId === comment.id ? (
@@ -278,7 +278,7 @@ export default function RequestDetail({
                 <div className='mt-2 pt-4 border-t border-stone-200 dark:border-stone-800'>
                   <div className={labelCls}>Add Internal Note</div>
                   <textarea
-                    className={`${inputCls} min-h-[80px] w-full mt-1`}
+                    className={`${inputCls} min-h-20 w-full mt-1`}
                     placeholder='Type an admin-only comment here...'
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
