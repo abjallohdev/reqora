@@ -64,7 +64,7 @@ model User {
   department   Department
   role         UserRole   @default(USER)
   avatarUrl    String?
-  passwordHash String?    // null if user signs in via OAuth only
+  password String?    // null if user signs in via OAuth only
 
   // Relations
   accounts         Account[]
