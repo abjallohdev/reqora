@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { columnHeader, PRIORITY_CONFIG, STATUS_CONFIG } from '@/lib/constant'
-import { Department, Priority, RequestStatus, RequestType } from '@/lib/enums'
 import { useSession } from 'next-auth/react'
 
 import { ServiceRequest } from '@/lib/types'
