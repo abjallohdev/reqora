@@ -11,7 +11,9 @@ export default function DashboardLayout({
     <AuthGuard>
       <div className='h-screen w-screen flex flex-col overflow-hidden'>
         <Header />
-        <div className='flex-1 overflow-hidden'>{children}</div>
+        <div className='flex-1 overflow-y-auto overflow-x-hidden'>
+          {children}
+        </div>
       </div>
     </AuthGuard>
   )

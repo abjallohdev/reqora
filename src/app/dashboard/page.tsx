@@ -1,6 +1,7 @@
 'use client'
 
-import { columns, ServiceRequest } from '@/components/columns'
+import { columns } from '@/components/columns'
+import { ServiceRequest } from '@/lib/types'
 import Container from '@/components/Container'
 import { DataTable } from '@/components/data-table'
 import RequestDetail from '@/components/RequestDetail'
@@ -8,17 +9,30 @@ import StatCard from '@/components/StatCard'
 import SubmitForm from '@/components/SubmitForm'
 import { Button } from '@/components/ui/button'
 import { RequestStatus } from '@/lib/enums'
-import { MOCK_REQUESTS } from '@/lib/constant'
+import { useAppDispatch, useAppSelector } from '@/lib/hooks'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useState } from 'react'
+import { fetchRequests } from '@/lib/features/request/requestSlice'
 
 const Page = () => {
-  const { data: session } = useSession()
-  
+  const { data: session, status: sessionStatus } = useSession()
+  const dispatch = useAppDispatch()
 
-  const [requests, setRequests] = useState<ServiceRequest[]>(MOCK_REQUESTS)
+  const requests = useAppSelector((state) => state.requests.items)
+  const reqStatus = useAppSelector((state) => state.requests.status)
+
+  useEffect(() => {
+    // Only fetch when session is definitively loaded, otherwise we might see weird behavior
+    if (sessionStatus === 'authenticated' && reqStatus === 'idle') {
+      dispatch(fetchRequests())
+    }
+  }, [reqStatus, sessionStatus, dispatch])
+
   const [showSubmit, setShowSubmit] = useState(false)
   const [selected, setSelected] = useState<ServiceRequest | null>(null)
+  const [editingRequest, setEditingRequest] = useState<ServiceRequest | null>(
+    null,
+  )
   const [toast, setToast] = useState<string | null>(null)
 
   const filteredRequests =
@@ -31,28 +45,73 @@ const Page = () => {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const handleSubmit = (req: ServiceRequest) => {
-    setRequests((r) => [req, ...r])
+  const handleSubmitSuccess = () => {
     setShowSubmit(false)
     showToast('Request submitted successfully!')
   }
 
-  const handleUpdate = (updated: ServiceRequest) => {
-    setRequests((r) => r.map((x) => (x.id === updated.id ? updated : x)))
+  const handleUpdateSuccess = () => {
     showToast('Request updated successfully!')
   }
 
-const counts = {
-  total: filteredRequests.length,
-  pending: filteredRequests.filter((r) => r.status === RequestStatus.PENDING)
-    .length,
-  inProgress: filteredRequests.filter(
-    (r) => r.status === RequestStatus.IN_PROGRESS,
-  ).length,
-  completed: filteredRequests.filter(
-    (r) => r.status === RequestStatus.COMPLETED,
-  ).length,
-}
+  const handleDeleteSuccess = () => {
+    setSelected(null)
+    showToast('Request deleted successfully!')
+  }
+
+  const handleEditSuccess = () => {
+    setEditingRequest(null)
+    setSelected(null)
+    showToast('Request updated successfully!')
+  }
+
+  const counts = {
+    total: filteredRequests.length,
+    pending: filteredRequests.filter((r) => r.status === RequestStatus.PENDING)
+      .length,
+    inProgress: filteredRequests.filter(
+      (r) => r.status === RequestStatus.IN_PROGRESS,
+    ).length,
+    completed: filteredRequests.filter(
+      (r) => r.status === RequestStatus.COMPLETED,
+    ).length,
+  }
+
+  // Handle loading states natively for true "fetch on load" feel
+  if (
+    sessionStatus === 'loading' ||
+    reqStatus === 'loading' ||
+    reqStatus === 'idle'
+  ) {
+    return (
+      <div className='min-h-screen bg-stone-100 dark:bg-stone-900 flex flex-col items-center justify-center'>
+        <div className='w-8 h-8 rounded-full border-4 border-stone-300 dark:border-stone-700 border-t-stone-900 dark:border-t-stone-100 animate-spin'></div>
+        <p className='mt-4 text-sm font-medium text-stone-500 dark:text-stone-400'>
+          Loading your workspace...
+        </p>
+      </div>
+    )
+  }
+
+  if (reqStatus === 'failed') {
+    return (
+      <div className='min-h-screen bg-stone-100 dark:bg-stone-900 flex flex-col items-center justify-center text-center px-4'>
+        <div className='bg-red-50 dark:bg-red-950/30 text-red-500 p-4 rounded-xl max-w-md w-full border border-red-100 dark:border-red-900'>
+          <p className='font-bold mb-1'>Failed to load data</p>
+          <p className='text-sm opacity-80'>
+            There was an error communicating with the server. Please refresh to
+            try again.
+          </p>
+          <Button
+            onClick={() => window.location.reload()}
+            className='mt-4 bg-red-600 hover:bg-red-700 text-white'
+          >
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -143,10 +202,14 @@ const counts = {
       </div>
 
       {/* ── Modals ── */}
-      {showSubmit && (
+      {(showSubmit || editingRequest) && (
         <SubmitForm
-          onSubmit={handleSubmit}
-          onClose={() => setShowSubmit(false)}
+          existingRequest={editingRequest ?? undefined}
+          onSuccess={editingRequest ? handleEditSuccess : handleSubmitSuccess}
+          onClose={() => {
+            setShowSubmit(false)
+            setEditingRequest(null)
+          }}
         />
       )}
       {selected && (
@@ -154,7 +217,13 @@ const counts = {
           req={selected}
           onClose={() => setSelected(null)}
           isAdmin={session?.user.role === 'ADMIN'}
-          onUpdate={handleUpdate}
+          onUpdate={handleUpdateSuccess}
+          onDelete={handleDeleteSuccess}
+          onEdit={(req) => {
+            setSelected(null)
+            setEditingRequest(req)
+          }}
+          currentUserId={session?.user.id}
         />
       )}
 
