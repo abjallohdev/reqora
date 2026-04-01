@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +25,8 @@ import { z } from 'zod'
 import { signup } from '@/actions/signup'
 import { Spinner } from '@/components/ui/spinner'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 const DEPARTMENTS = [
   { value: 'ENGINEERING', label: 'Engineering' },
@@ -94,6 +96,8 @@ const signupSchema = z
 type SignupFormValues = z.infer<typeof signupSchema>
 
 const Page = () => {
+  const router = useRouter()
+  const { status } = useSession()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -113,6 +117,20 @@ const Page = () => {
       confirmPassword: '',
     },
   })
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard')
+    }
+  }, [status, router])
+
+  if (status === 'loading' || status === 'authenticated') {
+    return (
+      <div className='flex items-center justify-center w-full'>
+        <Spinner />
+      </div>
+    )
+  }
 
   const onSubmit = async (data: SignupFormValues) => {
     const result = await signup({

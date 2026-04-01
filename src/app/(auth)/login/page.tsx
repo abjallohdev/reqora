@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +16,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -37,6 +37,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 const Page = () => {
   const router = useRouter()
+  const { status } = useSession()
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -51,6 +52,20 @@ const Page = () => {
       password: '',
     },
   })
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard')
+    }
+  }, [status, router])
+
+  if (status === 'loading' || status === 'authenticated') {
+    return (
+      <div className='flex items-center justify-center w-full'>
+        <Spinner />
+      </div>
+    )
+  }
 
   const onSubmit = async (data: LoginFormValues) => {
     const result = await signIn('credentials', {
@@ -106,7 +121,6 @@ const Page = () => {
           <Field>
             <div className='flex items-center'>
               <FieldLabel htmlFor='password'>Password</FieldLabel>
-
               <a
                 href='#'
                 className='ml-auto text-sm underline-offset-4 hover:underline'
