@@ -24,6 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { signup } from '@/actions/signup'
 import { Spinner } from '@/components/ui/spinner'
+import Link from 'next/link'
 
 const DEPARTMENTS = [
   { value: 'ENGINEERING', label: 'Engineering' },
@@ -291,9 +292,9 @@ const Page = () => {
             </Button>
             <FieldDescription className='px-6 text-center'>
               Already have an account?{' '}
-              <a href='/login' className='underline underline-offset-4'>
-                Sign in
-              </a>
+              <Link href='/login' className='underline underline-offset-4'>
+                Login
+              </Link>
             </FieldDescription>
           </Field>
         </FieldGroup>
