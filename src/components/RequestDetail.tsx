@@ -15,7 +15,11 @@ const RequestDetail = ({
   onUpdate: (req: ServiceRequest) => void
 }) => {
     const [editStatus, setEditStatus] = useState(req.status)
-      const [editAssigned, setEditAssigned] = useState(req.assignedTo)
+      // const [editAssigned, setEditAssigned] = useState(req.assignedTo)
+      const [editAssigned, setEditAssigned] = useState<string>(
+        req.assignedTo?.name ?? '',
+      )
+
       const [note, setNote] = useState('')
       const sc =
         STATUS_CONFIG[req.status as keyof typeof STATUS_CONFIG] ??
@@ -23,6 +27,7 @@ const RequestDetail = ({
       const pc =
         PRIORITY_CONFIG[req.priority as keyof typeof PRIORITY_CONFIG] ??
         PRIORITY_CONFIG['MEDIUM']
+        
         
   return (
     <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
@@ -38,15 +43,9 @@ const RequestDetail = ({
                 {req.title}
               </h2>
               <div className='flex gap-2 flex-wrap mt-2.5'>
-                <Badge className={sc.badge}>
-                  {req.status}
-                </Badge>
-                <Badge className={pc.badge}>
-                  {req.priority}
-                </Badge>
-                <Badge>
-                  {req.department}
-                </Badge>
+                <Badge className={sc.badge}>{req.status}</Badge>
+                <Badge className={pc.badge}>{req.priority}</Badge>
+                <Badge>{req.department}</Badge>
               </div>
             </div>
             <button
@@ -63,8 +62,8 @@ const RequestDetail = ({
           <div className='grid grid-cols-2 gap-4 mb-5'>
             {(
               [
-                ['Submitted By', req.submittedBy],
-                ['Date', req.date],
+                ['Submitted By', req.submittedBy.name],
+                ['Date', req.createdAt.toLocaleString()],
                 ['Assigned To', req.assignedTo],
                 ['Department', req.department],
               ] as [string, string][]
@@ -98,7 +97,9 @@ const RequestDetail = ({
                   <select
                     className={selectCls}
                     value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value)}
+                    onChange={(e) =>
+                      setEditStatus(e.target.value as typeof editStatus)
+                    }
                   >
                     {STATUSES.map((s) => (
                       <option key={s}>{s}</option>
@@ -107,6 +108,12 @@ const RequestDetail = ({
                 </div>
                 <div>
                   <div className={labelCls}>Assign To</div>
+                  {/* <input
+                    className={selectCls}
+                    value={editAssigned}
+                    onChange={(e) => setEditAssigned(e.target.value)}
+                    placeholder='Team or person'
+                  /> */}
                   <input
                     className={selectCls}
                     value={editAssigned}
@@ -126,11 +133,11 @@ const RequestDetail = ({
               </div>
               <button
                 onClick={() => {
-                  onUpdate({
-                    ...req,
-                    status: editStatus,
-                    assignedTo: editAssigned,
-                  })
+                  // onUpdate({
+                  //   ...req,
+                  //   status: editStatus,
+                  //   assignedTo: editAssigned,
+                  // })
                   onClose()
                 }}
                 className='px-5 py-2 bg-stone-900 text-white border-none rounded-lg cursor-pointer text-sm font-semibold font-[inherit] hover:bg-stone-700 transition-colors'
